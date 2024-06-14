@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Привет, {{ username }}</h1>
+
+        <!-- Форма для создания новой заявки -->
+        <form action="{{ url_for('dashboard') }}" method="post">
+            <div class="form-group">
+                <label for="request_number">Номер заявки:</label>
+                <input type="text" class="form-control" id="request_number" name="request_number">
+            </div>
+
+            <div class="form-group">
+                <label for="full_name">ФИО:</label>
+                <input type="text" class="form-control" id="full_name" name="full_name">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Телефон:</label>
+                <input type="text" class="form-control" id="phone" name="phone">
+            </div>
+
+            <div class="form-group">
+                 <label for="ssid">SSID:</label>
+                  <select class="form-control" id="ssid" name="ssid">
+                      <option value="STAFF">STAFF</option>
+                      <option value="GUEST">GUEST</option>
+                  </select>
+            </div>
+
+            <div class="form-group">
+                <label for="login">Логин:</label>
+                <input type="text" class="form-control" id="login" name="login">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+        <!-- Добавляем значение сгенерированного пароля в атрибут value -->
+                <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}">
+            </div>
+
+
+            <div class="form-group">
+                <label for="message">Сообщение для пользователя:</label>
+                <textarea class="form-control" id="message" name="message"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </form>
+
+
+        <form action="{{ url_for('dashboard') }}" method="post">
+
+          <div class="form-group">
+             <input type="hidden" id="selected_requests" name="selected_requests" value="">
+         </div>
+
+           <button type="submit" class="btn btn-primary">Добавить</button>
+    <!-- Кнопка для удаления выбранных заявок -->
+         <button type="button" class="btn btn-danger" onclick="deleteSelected()">Удалить выбранные</button>
+        </form>
+
+
+        <!-- Форма для ввода поискового запроса -->
+<form method="get" action="{{ url_for('dashboard') }}">
+    <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск по ФИО">
+    <button type="submit">Искать</button>
+</form>
+
+        {% if user_requests %}
+    <!-- Таблица заявок -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Номер заявки</th>
+                <th>ФИО</th>
+                <th>Телефон</th>
+                <th>SSID</th>
+                <th>Логин</th>
+                <th>Пароль</th>
+                <th>Сообщение для пользователя</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in user_requests %}
+                <tr>
+                    <td>{{ request.request_number }}</td>
+                    <td>{{ request.full_name }}</td>
+                    <td>{{ request.phone }}</td>
+                    <td>{{ request.ssid }}</td>
+                    <td>{{ request.login }}</td>
+                    <td>{{ request.password }}</td>
+                    <td>{{ request.message }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Сотрудник не найден.</p>
+{% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+<script>
+    function deleteSelected() {
+        var selectedRequests = [];
+
+        // Перебор всех чекбоксов и добавление выбранных заявок в массив
+        $('input[name="selected"]:checked').each(function() {
+            selectedRequests.push($(this).val());
+        });
+
+        // Обновление значения скрытого поля
+        $('#selected_requests').val(JSON.stringify(selectedRequests));
+
+        // Отправка формы на сервер
+        $('form').submit();
+    }
+</script>
+</html>
