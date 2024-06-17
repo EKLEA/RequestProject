@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>dashboardAdmin</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -12,7 +12,7 @@
         <h1>Привет, {{ username }}</h1>
 
         <!-- Форма для создания новой заявки -->
-        <form action="{{ url_for('dashboard') }}" method="post">
+        <form action="{{ url_for('dashboardAdmin') }}" method="post">
             <div class="form-group">
                 <label for="request_number">Номер заявки:</label>
                 <input type="text" class="form-control" id="request_number" name="request_number">
@@ -56,7 +56,7 @@
         </form>
 
 
-        <form action="{{ url_for('dashboard') }}" method="post">
+        <form action="{{ url_for('dashboardAdmin') }}" method="post">
 
           <div class="form-group">
              <input type="hidden" id="selected_requests" name="selected_requests" value="">
@@ -69,7 +69,7 @@
 
 
         <!-- Форма для ввода поискового запроса -->
-<form method="get" action="{{ url_for('dashboard') }}">
+<form method="get" action="{{ url_for('dashboardAdmin') }}">
     <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск по ФИО">
     <button type="submit">Искать</button>
 </form>
