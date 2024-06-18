@@ -1,5 +1,4 @@
-/* styleDashboardAdmin.css */
-
+/* Reset styles */
 *,
 *:before,
 *:after {
@@ -8,15 +7,14 @@
     box-sizing: border-box;
 }
 
-/* Общие стили для страницы */
+/* General page styles */
 body {
     background-color: #080710;
     font-family: 'Poppins', sans-serif;
-
     color: #ffffff;
 }
 
-/* Основные стили для вкладок */
+/* Tab buttons styles */
 .tab-button {
     background-color: rgba(255, 255, 255, 0.1);
     border: none;
@@ -36,7 +34,7 @@ body {
     background-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Скрытие содержимого вкладок по умолчанию */
+/* Default hidden tab content */
 .tab-content {
     display: none;
     padding: 20px;
@@ -49,7 +47,7 @@ body {
     box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
 }
 
-/* Основные стили для формы */
+/* Form group styles */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -78,6 +76,7 @@ label {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
+/* Button styles */
 .btn {
     display: inline-block;
     font-weight: 600;
@@ -87,12 +86,11 @@ label {
     cursor: pointer;
     background-color: #ffffff;
     border: 1px solid transparent;
-    padding: 15px 0;
-    font-size: 18px;
+    padding: 10px 20px;
+    font-size: 16px;
     line-height: 1.5;
     border-radius: 5px;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    width: 100%;
 }
 
 .btn-primary {
@@ -119,7 +117,7 @@ label {
     border-color: #bd2130;
 }
 
-/* Стили для таблицы */
+/* Table styles */
 .table {
     width: 100%;
     margin-bottom: 1rem;
@@ -147,7 +145,7 @@ label {
     background-color: rgba(255, 255, 255, 0.13);
 }
 
-/* Стили для чекбоксов в таблице */
+/* Checkbox styles in table */
 input[type="checkbox"] {
     margin: 0;
     position: relative;
@@ -156,11 +154,63 @@ input[type="checkbox"] {
     transform: scale(1.5);
 }
 
-/* Стили для заголовка страницы */
+/* Page title styles */
 h1 {
     font-size: 32px;
     font-weight: 500;
     line-height: 42px;
     text-align: center;
     margin-bottom: 30px;
+}
+
+/* Horizontal form styles */
+.d-flex.align-items-center {
+    margin-top: 20px;
+}
+
+.form-inline {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.form-inline .form-control {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+
+.btn-import {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-import:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+/* Additional styles for buttons alignment */
+#Tab1 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#Tab1 .btn-success,
+#Tab1 .btn-danger {
+    margin-top: 0; /* Remove top margin */
+    margin-bottom: 10px; /* Add bottom margin */
+    margin-left: 10px; /* Add left margin */
 }
