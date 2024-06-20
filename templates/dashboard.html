@@ -133,19 +133,19 @@
 
         <!-- Кнопка для импорта и экспорта и форма для поиска -->
         <div class="d-flex align-items-center mt-3">
-            <form action="{{ url_for('search_requests',arg1='dashboardAdmin') }}" method="POST" class="form-inline">
+            <form action="{{ url_for('search_requests',arg1='dashboard') }}" method="POST" class="form-inline">
                 <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
                 <button type="submit" class="btn btn-primary">Искать</button>
             </form>
 
             <div class="file-import-container ml-auto">
-                <form action="{{ url_for('import_excel',arg1='dashboardAdmin') }}" method="POST" enctype="multipart/form-data" class="form-inline">
+                <form action="{{ url_for('import_excel',arg1='dashboard') }}" method="POST" enctype="multipart/form-data" class="form-inline">
                     <input type="file" name="file" accept=".xlsx" class="form-control-file mr-2">
                     <button type="submit" class="btn btn-success">Импорт</button>
                 </form>
             </div>
 
-            <form action="{{ url_for('export_excel',arg1='dashboardAdmin') }}" method="GET" class="ml-2">
+            <form action="{{ url_for('export_excel',arg1='dashboard') }}" method="GET" class="ml-2">
                 <button type="submit" class="btn btn-info">Экспорт</button>
             </form>
        </div>
