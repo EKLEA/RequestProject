@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styleDashboardAdmin.css') }}">
     <script>
+
         function validateForm(formId) {
             var form = document.getElementById(formId);
             var inputs = form.getElementsByTagName('input');
@@ -74,116 +75,124 @@
     </script>
 </head>
 <body>
-
+     <div id="alertContainer" class="container mt-3"></div>
     <div>
         <button class="tab-button" onclick="openTab(event, 'Tab1')">Заявки</button>
         <button class="tab-button" onclick="openTab(event, 'Tab2')">Админы</button>
     </div>
 
     <div id="Tab1" class="tab-content">
-    <h1>Привет, {{ username }}</h1>
+        <h1>Привет, {{ username }}</h1>
 
-    <!-- Форма для создания новой заявки -->
-    <form id="requestForm" action="{{ url_for('add_request', arg1=generated_password) }}" method="post" onsubmit="return validateForm('requestForm')">
-        <div class="form-group">
-            <label for="request_number">Номер заявки:</label>
-            <input type="text" class="form-control" id="request_number" name="request_number">
-        </div>
+        <!-- Форма для создания новой заявки -->
+        <form id="requestForm" action="{{ url_for('add_request', arg1=generated_password,arg2='dashboardAdmin') }}" method="post" onsubmit="return validateForm('requestForm')">
+            <div class="form-group">
+                <label for="request_number">Номер заявки:</label>
+                <input type="text" class="form-control" id="request_number" name="request_number">
+            </div>
 
-        <div class="form-group">
-            <label for="last_name">Фамилия:</label>
-            <input type="text" class="form-control" id="last_name" name="last_name">
-        </div>
+            <div class="form-group">
+                <label for="last_name">Фамилия:</label>
+                <input type="text" class="form-control" id="last_name" name="last_name">
+            </div>
 
-        <div class="form-group">
-            <label for="first_name">Имя:</label>
-            <input type="text" class="form-control" id="first_name" name="first_name">
-        </div>
+            <div class="form-group">
+                <label for="first_name">Имя:</label>
+                <input type="text" class="form-control" id="first_name" name="first_name">
+            </div>
 
-        <div class="form-group">
-            <label for="middle_name">Отчество:</label>
-            <input type="text" class="form-control" id="middle_name" name="middle_name">
-        </div>
+            <div class="form-group">
+                <label for="middle_name">Отчество:</label>
+                <input type="text" class="form-control" id="middle_name" name="middle_name">
+            </div>
 
-        <div class="form-group">
-            <label for="phone">Телефон:</label>
-            <input type="text" class="form-control" id="phone" name="phone">
-        </div>
+            <div class="form-group">
+                <label for="phone">Телефон:</label>
+                <input type="text" class="form-control" id="phone" name="phone">
+            </div>
 
-        <div class="form-group">
-            <label for="ssid">SSID:</label>
-            <select class="form-control" id="ssid" name="ssid">
-                <option value="STAFF">STAFF</option>
-                <option value="GUEST">GUEST</option>
-            </select>
-        </div>
+            <div class="form-group">
+                <label for="ssid">SSID:</label>
+                <select class="form-control" id="ssid" name="ssid">
+                    <option value="STAFF">STAFF</option>
+                    <option value="GUEST">GUEST</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="login">Логин:</label>
-            <input type="text" class="form-control" id="login" name="login">
-        </div>
+            <div class="form-group">
+                <label for="login">Логин:</label>
+                <input type="text" class="form-control" id="login" name="login">
+            </div>
 
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}">
-        </div>
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}">
+            </div>
 
-        <button type="submit" class="btn btn-primary">Добавить</button>
-    </form>
-
-    <!-- Кнопка для импорта и форма для поиска -->
-    <div class="d-flex align-items-center mt-3">
-        <form action="{{ url_for('search_requests') }}" method="POST" class="form-inline">
-            <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
-            <button type="submit" class="btn btn-primary">Искать</button>
+            <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
 
+        <!-- Кнопка для импорта и экспорта и форма для поиска -->
+       <div class="d-flex align-items-center mt-3">
+            <form action="{{ url_for('search_requests',arg1='dashboardAdmin') }}" method="POST" class="form-inline">
+                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
+                <button type="submit" class="btn btn-primary">Искать</button>
+            </form>
 
-        <button class="btn btn-success ml-auto">Импорт</button>
-    </div>
+            <div class="ml-auto d-flex align-items-center file-export-container">
+                <form action="{{ url_for('import_excel',arg1='dashboardAdmin') }}" method="POST" enctype="multipart/form-data" class="form-inline d-flex align-items-center">
+                    <input type="file" name="file" accept=".xlsx" class="form-control-file mr-2">
+                    <button type="submit" class="btn btn-success">Импорт</button>
+                </form>
 
-    <!-- Форма для удаления выбранных заявок -->
-    <form action="{{ url_for('delete_requests') }}" method="post" id="deleteForm">
-        <button type="submit" class="btn btn-danger btn-sm mt-3">Удалить выбранные</button>
-        {% if user_requests %}
-        <!-- Таблица заявок -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Номер заявки</th>
-                    <th>Фамилия</th>
-                    <th>Имя</th>
-                    <th>Отчество</th>
-                    <th>Телефон</th>
-                    <th>SSID</th>
-                    <th>Логин</th>
-                    <th>Пароль</th>
-                    <th>Админ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for request in user_requests %}
+                <form action="{{ url_for('export_excel',arg1='dashboardAdmin') }}" method="GET" class="d-flex align-items-center ml-2">
+                    <button type="submit" class="btn btn-info">Экспорт</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Форма для удаления выбранных заявок -->
+        <form action="{{ url_for('delete_requests',arg1='dashboardAdmin') }}" method="post" id="deleteForm">
+            <button type="submit" class="btn btn-danger btn-sm mt-3">Удалить выбранные</button>
+            {% if user_requests %}
+            <!-- Таблица заявок -->
+            <table class="table">
+                <thead>
                     <tr>
-                        <td><input type="checkbox" name="selected_requests" value="{{ request._id }}"></td>
-                        <td>{{ request.request_number }}</td>
-                        <td>{{ request.last_name }}</td>
-                        <td>{{ request.first_name }}</td>
-                        <td>{{ request.middle_name }}</td>
-                        <td>{{ request.phone }}</td>
-                        <td>{{ request.ssid }}</td>
-                        <td>{{ request.login }}</td>
-                        <td>{{ request.password }}</td>
-                        <td>{{ request.adminInitials }}</td>
+                        <th></th>
+                        <th>Номер заявки</th>
+                        <th>Фамилия</th>
+                        <th>Имя</th>
+                        <th>Отчество</th>
+                        <th>Телефон</th>
+                        <th>SSID</th>
+                        <th>Логин</th>
+                        <th>Пароль</th>
+                        <th>Админ</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-            <p>Заявки не найдены.</p>
-        {% endif %}
-    </form>
-</div>
+                </thead>
+                <tbody>
+                    {% for request in user_requests %}
+                        <tr>
+                            <td><input type="checkbox" name="selected_requests" value="{{ request._id }}"></td>
+                            <td>{{ request.request_number }}</td>
+                            <td>{{ request.last_name }}</td>
+                            <td>{{ request.first_name }}</td>
+                            <td>{{ request.middle_name }}</td>
+                            <td>{{ request.phone }}</td>
+                            <td>{{ request.ssid }}</td>
+                            <td>{{ request.login }}</td>
+                            <td>{{ request.password }}</td>
+                            <td>{{ request.adminInitials }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>Заявки не найдены.</p>
+            {% endif %}
+        </form>
+    </div>
 
 
 

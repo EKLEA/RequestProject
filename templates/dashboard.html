@@ -3,24 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dashboardAdmin</title>
+    <title>Dashboard Admin</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styleDashboard.css') }}">
+    <script>
+
+        function validateForm(formId) {
+            var form = document.getElementById(formId);
+            var inputs = form.getElementsByTagName('input');
+            var selects = form.getElementsByTagName('select');
+            var emptyFields = [];
+            var phonePattern = /^(\+7|8)?\d{10}$/;
+
+            // Проверка на пустоту полей
+            for (var input of inputs) {
+                if (input.type !== 'submit' && input.value.trim() === '') {
+                    emptyFields.push(input.name);
+                }
+            }
+
+            for (var select of selects) {
+                if (select.value.trim() === '') {
+                    emptyFields.push(select.name);
+                }
+            }
+
+            if (emptyFields.length > 0) {
+                alert("Все поля должны быть заполнены: " + emptyFields.join(', '));
+                return false;
+            }
+
+            // Проверка номера телефона
+            var phoneInput = form.querySelector('input[name="phone"]');
+            if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
+                alert("Некорректный номер телефона. Номер должен начинаться с +7 или 8 и содержать 10 цифр.");
+                return false;
+            }
+
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!sessionStorage.getItem('activeTab')) {
+                sessionStorage.setItem('activeTab', 'Tab1');
+            }
+            openTab(null, sessionStorage.getItem('activeTab'));
+        });
+
+        function openTab(event, tabName) {
+            var i, tabContent, tabButtons;
+
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+            }
+
+            tabButtons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            if (event) {
+                event.currentTarget.className += " active";
+                sessionStorage.setItem('activeTab', tabName);
+            } else {
+                document.querySelector('.tab-button[onclick="openTab(event, \'' + tabName + '\')"]').className += " active";
+            }
+        }
+    </script>
 </head>
 <body>
-    <div class="container">
+
+    <div>
+        <button class="tab-button" onclick="openTab(event, 'Tab1')">Заявки</button>
+    </div>
+
+    <div id="Tab1" class="tab-content">
         <h1>Привет, {{ username }}</h1>
 
         <!-- Форма для создания новой заявки -->
-        <form action="{{ url_for('dashboardAdmin') }}" method="post">
+        <form id="requestForm" action="{{ url_for('add_request', arg1=generated_password,arg2='dashboard') }}" method="post" onsubmit="return validateForm('requestForm')">
             <div class="form-group">
                 <label for="request_number">Номер заявки:</label>
                 <input type="text" class="form-control" id="request_number" name="request_number">
             </div>
 
             <div class="form-group">
-                <label for="full_name">ФИО:</label>
-                <input type="text" class="form-control" id="full_name" name="full_name">
+                <label for="last_name">Фамилия:</label>
+                <input type="text" class="form-control" id="last_name" name="last_name">
+            </div>
+
+            <div class="form-group">
+                <label for="first_name">Имя:</label>
+                <input type="text" class="form-control" id="first_name" name="first_name">
+            </div>
+
+            <div class="form-group">
+                <label for="middle_name">Отчество:</label>
+                <input type="text" class="form-control" id="middle_name" name="middle_name">
             </div>
 
             <div class="form-group">
@@ -29,11 +111,11 @@
             </div>
 
             <div class="form-group">
-                 <label for="ssid">SSID:</label>
-                  <select class="form-control" id="ssid" name="ssid">
-                      <option value="STAFF">STAFF</option>
-                      <option value="GUEST">GUEST</option>
-                  </select>
+                <label for="ssid">SSID:</label>
+                <select class="form-control" id="ssid" name="ssid">
+                    <option value="STAFF">STAFF</option>
+                    <option value="GUEST">GUEST</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -43,90 +125,73 @@
 
             <div class="form-group">
                 <label for="password">Пароль:</label>
-        <!-- Добавляем значение сгенерированного пароля в атрибут value -->
                 <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}">
             </div>
 
-
-            <div class="form-group">
-                <label for="message">Сообщение для пользователя:</label>
-                <textarea class="form-control" id="message" name="message"></textarea>
-            </div>
             <button type="submit" class="btn btn-primary">Добавить</button>
         </form>
 
+        <!-- Кнопка для импорта и экспорта и форма для поиска -->
+        <div class="d-flex align-items-center mt-3">
+            <form action="{{ url_for('search_requests',arg1='dashboardAdmin') }}" method="POST" class="form-inline">
+                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
+                <button type="submit" class="btn btn-primary">Искать</button>
+            </form>
 
-        <form action="{{ url_for('dashboardAdmin') }}" method="post">
+            <div class="file-import-container ml-auto">
+                <form action="{{ url_for('import_excel',arg1='dashboardAdmin') }}" method="POST" enctype="multipart/form-data" class="form-inline">
+                    <input type="file" name="file" accept=".xlsx" class="form-control-file mr-2">
+                    <button type="submit" class="btn btn-success">Импорт</button>
+                </form>
+            </div>
 
-          <div class="form-group">
-             <input type="hidden" id="selected_requests" name="selected_requests" value="">
-         </div>
+            <form action="{{ url_for('export_excel',arg1='dashboardAdmin') }}" method="GET" class="ml-2">
+                <button type="submit" class="btn btn-info">Экспорт</button>
+            </form>
+       </div>
 
-           <button type="submit" class="btn btn-primary">Добавить</button>
-    <!-- Кнопка для удаления выбранных заявок -->
-         <button type="button" class="btn btn-danger" onclick="deleteSelected()">Удалить выбранные</button>
+        <!-- Форма для удаления выбранных заявок -->
+        <form action="{{ url_for('delete_requests',arg1='dashboard') }}" method="post" id="deleteForm">
+            <button type="submit" class="btn btn-danger btn-sm mt-3">Удалить выбранные</button>
+            {% if user_requests %}
+            <!-- Таблица заявок -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Номер заявки</th>
+                        <th>Фамилия</th>
+                        <th>Имя</th>
+                        <th>Отчество</th>
+                        <th>Телефон</th>
+                        <th>SSID</th>
+                        <th>Логин</th>
+                        <th>Пароль</th>
+                        <th>Админ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in user_requests %}
+                        <tr>
+                            <td><input type="checkbox" name="selected_requests" value="{{ request._id }}"></td>
+                            <td>{{ request.request_number }}</td>
+                            <td>{{ request.last_name }}</td>
+                            <td>{{ request.first_name }}</td>
+                            <td>{{ request.middle_name }}</td>
+                            <td>{{ request.phone }}</td>
+                            <td>{{ request.ssid }}</td>
+                            <td>{{ request.login }}</td>
+                            <td>{{ request.password }}</td>
+                            <td>{{ request.adminInitials }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>Заявки не найдены.</p>
+            {% endif %}
         </form>
-
-
-        <!-- Форма для ввода поискового запроса -->
-<form method="get" action="{{ url_for('dashboardAdmin') }}">
-    <input type="text" name="search" value="{{ search_query }}" placeholder="Поиск по ФИО">
-    <button type="submit">Искать</button>
-</form>
-
-        {% if user_requests %}
-    <!-- Таблица заявок -->
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Номер заявки</th>
-                <th>ФИО</th>
-                <th>Телефон</th>
-                <th>SSID</th>
-                <th>Логин</th>
-                <th>Пароль</th>
-                <th>Сообщение для пользователя</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for request in user_requests %}
-                <tr>
-                    <td>{{ request.request_number }}</td>
-                    <td>{{ request.full_name }}</td>
-                    <td>{{ request.phone }}</td>
-                    <td>{{ request.ssid }}</td>
-                    <td>{{ request.login }}</td>
-                    <td>{{ request.password }}</td>
-                    <td>{{ request.message }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>Сотрудник не найден.</p>
-{% endif %}
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-
-<script>
-    function deleteSelected() {
-        var selectedRequests = [];
-
-        // Перебор всех чекбоксов и добавление выбранных заявок в массив
-        $('input[name="selected"]:checked').each(function() {
-            selectedRequests.push($(this).val());
-        });
-
-        // Обновление значения скрытого поля
-        $('#selected_requests').val(JSON.stringify(selectedRequests));
-
-        // Отправка формы на сервер
-        $('form').submit();
-    }
-</script>
 </html>

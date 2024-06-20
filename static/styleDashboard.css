@@ -233,33 +233,14 @@ h1 {
 }
 
 #Tab1 .btn-success,
-#Tab1 .btn-info,
-#Tab1 .btn-danger {
-    margin-top: 0; /* Remove top margin */
-    margin-bottom: 10px; /* Add bottom margin */
-    margin-left: 10px; /* Add left margin */
-}
-
-/* Align file input and import button horizontally */
-.file-import-container {
-    display: flex;
-    align-items: center;
+#Tab1 .btn-info {
+    margin-top: 0;
     margin-bottom: 10px;
+    margin-left: 10px;
 }
 
-.file-import-container .form-control-file {
-    margin-right: 10px; /* Space between file input and import button */
-}
-
-.ml-auto.d-flex.align-items-center form {
-    margin-bottom: 0; /* Ensure all forms have no bottom margin */
-}
-
-.file-export-container {
-    display: flex;
-    align-items: center;
-}
-
-.file-export-container .form-inline {
-    margin-right: 10px;
+#Tab1 .btn-danger {
+    margin-top: 0;
+    margin-bottom: 10px;
+    margin-left: 10px;
 }
