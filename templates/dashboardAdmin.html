@@ -9,70 +9,63 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styleDashboardAdmin.css') }}">
     <script>
 
-        function validateForm(formId) {
-            var form = document.getElementById(formId);
-            var inputs = form.getElementsByTagName('input');
-            var selects = form.getElementsByTagName('select');
-            var emptyFields = [];
-            var phonePattern = /^(\+7|8)?\d{10}$/;
 
-            // Проверка на пустоту полей
-            for (var input of inputs) {
-                if (input.type !== 'submit' && input.value.trim() === '') {
-                    emptyFields.push(input.name);
-                }
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!sessionStorage.getItem('activeTab')) {
+            sessionStorage.setItem('activeTab', 'Tab1');
+        }
+        openTab(null, sessionStorage.getItem('activeTab'));
+    });
 
-            for (var select of selects) {
-                if (select.value.trim() === '') {
-                    emptyFields.push(select.name);
-                }
-            }
+    function openTab(event, tabName) {
+        var i, tabContent, tabButtons;
 
-            if (emptyFields.length > 0) {
-                alert("Все поля должны быть заполнены: " + emptyFields.join(', '));
-                return false;
-            }
-
-            // Проверка номера телефона
-            var phoneInput = form.querySelector('input[name="phone"]');
-            if (phoneInput && !phonePattern.test(phoneInput.value.trim())) {
-                alert("Некорректный номер телефона. Номер должен начинаться с +7 или 8 и содержать 10 цифр.");
-                return false;
-            }
-
-            return true;
+        tabContent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabContent.length; i++) {
+            tabContent[i].style.display = "none";
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!sessionStorage.getItem('activeTab')) {
-                sessionStorage.setItem('activeTab', 'Tab1');
-            }
-            openTab(null, sessionStorage.getItem('activeTab'));
+        tabButtons = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+        }
+
+        document.getElementById(tabName).style.display = "block";
+        if (event) {
+            event.currentTarget.className += " active";
+            sessionStorage.setItem('activeTab', tabName);
+        } else {
+            document.querySelector('.tab-button[onclick="openTab(event, \'' + tabName + '\')"]').className += " active";
+        }
+    }
+
+    function validateSendMessagesForm() {
+        // Получаем все выбранные чекбоксы заявок
+        var checkboxes = document.querySelectorAll('input[name="selected_requests"]:checked');
+        // Создаем массив для сохранения ID выбранных заявок
+        var selectedIds = [];
+
+        // Проходимся по каждому выбранному чекбоксу и добавляем его значение в массив
+        checkboxes.forEach(function(checkbox) {
+            selectedIds.push(checkbox.value);
         });
 
-        function openTab(event, tabName) {
-            var i, tabContent, tabButtons;
-
-            tabContent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabContent.length; i++) {
-                tabContent[i].style.display = "none";
-            }
-
-            tabButtons = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-            }
-
-            document.getElementById(tabName).style.display = "block";
-            if (event) {
-                event.currentTarget.className += " active";
-                sessionStorage.setItem('activeTab', tabName);
-            } else {
-                document.querySelector('.tab-button[onclick="openTab(event, \'' + tabName + '\')"]').className += " active";
-            }
+        // Проверяем, что есть хотя бы одна выбранная заявка
+        if (selectedIds.length > 0) {
+            // Добавляем выбранные ID в скрытое поле формы для рассылки сообщений
+            document.getElementById('selectedRequestsInput').value = JSON.stringify(selectedIds);
+            return true; // Продолжаем отправку формы
+        } else {
+            alert('Пожалуйста, выберите заявки для рассылки.');
+            return false; // Прерываем отправку формы
         }
-    </script>
+    }
+</script>
+
+
+
+
+
 </head>
 <body>
      <div id="alertContainer" class="container mt-3"></div>
@@ -82,117 +75,143 @@
     </div>
 
     <div id="Tab1" class="tab-content">
-        <h1>Привет, {{ username }}</h1>
+    <h1>Привет, {{ username }}</h1>
 
-        <!-- Форма для создания новой заявки -->
-        <form id="requestForm" action="{{ url_for('add_request', arg1=generated_password,arg2='dashboardAdmin') }}" method="post" onsubmit="return validateForm('requestForm')">
-            <div class="form-group">
-                <label for="request_number">Номер заявки:</label>
-                <input type="text" class="form-control" id="request_number" name="request_number">
-            </div>
-
-            <div class="form-group">
-                <label for="last_name">Фамилия:</label>
-                <input type="text" class="form-control" id="last_name" name="last_name">
-            </div>
-
-            <div class="form-group">
-                <label for="first_name">Имя:</label>
-                <input type="text" class="form-control" id="first_name" name="first_name">
-            </div>
-
-            <div class="form-group">
-                <label for="middle_name">Отчество:</label>
-                <input type="text" class="form-control" id="middle_name" name="middle_name">
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Телефон:</label>
-                <input type="text" class="form-control" id="phone" name="phone">
-            </div>
-
-            <div class="form-group">
-                <label for="ssid">SSID:</label>
-                <select class="form-control" id="ssid" name="ssid">
-                    <option value="STAFF">STAFF</option>
-                    <option value="GUEST">GUEST</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="login">Логин:</label>
-                <input type="text" class="form-control" id="login" name="login">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Пароль:</label>
-                <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Добавить</button>
-        </form>
-
-        <!-- Кнопка для импорта и экспорта и форма для поиска -->
-       <div class="d-flex align-items-center mt-3">
-            <form action="{{ url_for('search_requests',arg1='dashboardAdmin') }}" method="POST" class="form-inline">
-                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
-                <button type="submit" class="btn btn-primary">Искать</button>
-            </form>
-
-            <div class="ml-auto d-flex align-items-center file-export-container">
-                <form action="{{ url_for('import_excel',arg1='dashboardAdmin') }}" method="POST" enctype="multipart/form-data" class="form-inline d-flex align-items-center">
-                    <input type="file" name="file" accept=".xlsx" class="form-control-file mr-2">
-                    <button type="submit" class="btn btn-success">Импорт</button>
-                </form>
-
-                <form action="{{ url_for('export_excel',arg1='dashboardAdmin') }}" method="GET" class="d-flex align-items-center ml-2">
-                    <button type="submit" class="btn btn-info">Экспорт</button>
-                </form>
-            </div>
+    <!-- Форма для создания новой заявки -->
+    <form id="requestForm" action="{{ url_for('add_request', arg1=generated_password,arg2='dashboardAdmin') }}" method="post" onsubmit="return validateForm('requestForm')">
+        <div class="form-group">
+            <label for="request_number">Номер заявки:</label>
+            <input type="text" class="form-control" id="request_number" name="request_number" required>
+            <div class="error-message"></div>
         </div>
 
-        <!-- Форма для удаления выбранных заявок -->
-        <form action="{{ url_for('delete_requests',arg1='dashboardAdmin') }}" method="post" id="deleteForm">
-            <button type="submit" class="btn btn-danger btn-sm mt-3">Удалить выбранные</button>
-            {% if user_requests %}
-            <!-- Таблица заявок -->
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Номер заявки</th>
-                        <th>Фамилия</th>
-                        <th>Имя</th>
-                        <th>Отчество</th>
-                        <th>Телефон</th>
-                        <th>SSID</th>
-                        <th>Логин</th>
-                        <th>Пароль</th>
-                        <th>Админ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in user_requests %}
-                        <tr>
-                            <td><input type="checkbox" name="selected_requests" value="{{ request._id }}"></td>
-                            <td>{{ request.request_number }}</td>
-                            <td>{{ request.last_name }}</td>
-                            <td>{{ request.first_name }}</td>
-                            <td>{{ request.middle_name }}</td>
-                            <td>{{ request.phone }}</td>
-                            <td>{{ request.ssid }}</td>
-                            <td>{{ request.login }}</td>
-                            <td>{{ request.password }}</td>
-                            <td>{{ request.adminInitials }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-                <p>Заявки не найдены.</p>
-            {% endif %}
+        <div class="form-group">
+            <label for="last_name">Фамилия:</label>
+            <input type="text" class="form-control" id="last_name" name="last_name" required>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="first_name">Имя:</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" required>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="middle_name">Отчество:</label>
+            <input type="text" class="form-control" id="middle_name" name="middle_name"required>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Телефон:</label>
+            <input type="tel" class="form-control" id="phone" name="phone" pattern="(?:\+7|8)(?:\s*\d){10}"  title="Номер телефона должен начинаться с +7 или 8 и иметь 11 цифр" required>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Почта:</label>
+            <input type="email" class="form-control" id="email" name="email">
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="ssid">SSID:</label>
+            <select class="form-control" id="ssid" name="ssid" required>
+                <option value="STAFF">STAFF</option>
+                <option value="GUEST">GUEST</option>
+            </select>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="login">Логин:</label>
+            <input type="text" class="form-control" id="login" name="login" required>
+            <div class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="text" class="form-control" id="password" name="password" value="{{ generated_password }}" required>
+            <div class="error-message"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </form>
+
+
+    <div class="d-flex align-items-center mt-3">
+        <form action="{{ url_for('search_requests',arg1='dashboardAdmin') }}" method="POST" class="form-inline">
+            <input type="text" name="search_query" value="{{ search_query }}" placeholder="Поиск по фамилии" class="form-control mr-2">
+            <button type="submit" class="btn btn-primary">Искать</button>
         </form>
+        <!-- Форма для рассылки сообщений -->
+        <div class="ml-auto d-flex align-items-center file-export-container">
+            <form id="sendMessagesForm" action="{{ url_for('send_messages', arg1='dashboardAdmin') }}" method="post" class="form-inline d-flex align-items-center ml-2" onsubmit="return validateSendMessagesForm()">
+                <select class="form-control mr-2" id="send_method" name="send_method">
+                    <option value="phone">Телефон</option>
+                    <option value="email">Почта</option>
+                </select>
+                <!-- Скрытое поле для передачи выбранных заявок -->
+                <input type="hidden" id="selectedRequestsInput" name="selected_requests">
+                <button type="submit" class="btn btn-primary">Рассылка</button>
+            </form>
+            <form action="{{ url_for('import_excel',arg1='dashboardAdmin') }}" method="POST" enctype="multipart/form-data" class="form-inline d-flex align-items-center">
+                <input type="file" name="file" accept=".xlsx" class="form-control-file mr-2">
+                <button type="submit" class="btn btn-success">Импорт</button>
+            </form>
+
+            <form action="{{ url_for('export_excel',arg1='dashboardAdmin') }}" method="GET" class="d-flex align-items-center ml-2">
+                <button type="submit" class="btn btn-info">Экспорт</button>
+            </form>
+        </div>
     </div>
+
+    <!-- Форма для удаления выбранных заявок -->
+    <form action="{{ url_for('delete_requests', arg1='dashboardAdmin') }}" method="post" id="deleteForm">
+        <button type="submit" class="btn btn-danger btn-sm mt-3">Удалить выбранные</button>
+        {% if user_requests %}
+        <!-- Таблица заявок -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Номер заявки</th>
+                    <th>Фамилия</th>
+                    <th>Имя</th>
+                    <th>Отчество</th>
+                    <th>Телефон</th>
+                    <th>Почта</th>
+                    <th>SSID</th>
+                    <th>Логин</th>
+                    <th>Пароль</th>
+                    <th>Админ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in user_requests %}
+                <tr>
+                    <td><input type="checkbox" name="selected_requests" value="{{ request._id }}"></td>
+                    <td>{{ request.request_number }}</td>
+                    <td>{{ request.last_name }}</td>
+                    <td>{{ request.first_name }}</td>
+                    <td>{{ request.middle_name }}</td>
+                    <td>{{ request.phone }}</td>
+                    <td>{{ request.email }}</td>
+                    <td>{{ request.ssid }}</td>
+                    <td>{{ request.login }}</td>
+                    <td>{{ request.password }}</td>
+                    <td>{{ request.adminInitials }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Заявки не найдены.</p>
+        {% endif %}
+    </form>
+</div>
+
 
 
 
@@ -202,15 +221,18 @@
         <form id="adminForm" action="{{ url_for('add_admin', arg1=generated_password) }}" method="post" onsubmit="return validateForm('adminForm')">
             <div class="form-group">
                 <label for="admin_last_name">Фамилия:</label>
-                <input type="text" class="form-control" id="admin_last_name" name="admin_last_name">
+                <input type="text" class="form-control" id="admin_last_name" name="admin_last_name" required>
+                <div class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="admin_first_name">Имя:</label>
-                <input type="text" class="form-control" id="admin_first_name" name="admin_first_name">
+                <input type="text" class="form-control" id="admin_first_name" name="admin_first_name" required>
+                <div class="error-message"></div>
             </div>
             <div class="form-group">
                 <label for="admin_middle_name">Отчество:</label>
-                <input type="text" class="form-control" id="admin_middle_name" name="admin_middle_name">
+                <input type="text" class="form-control" id="admin_middle_name" name="admin_middle_name" required>
+                <div class="error-message"></div>
             </div>
 
             <div class="form-group">
@@ -223,12 +245,14 @@
 
             <div class="form-group">
                 <label for="admin_login">Логин:</label>
-                <input type="text" class="form-control" id="admin_login" name="admin_login">
+                <input type="text" class="form-control" id="admin_login" name="admin_login" required>
+                <div class="error-message"></div>
             </div>
 
             <div class="form-group">
                 <label for="admin_password">Пароль:</label>
-                <input type="text" class="form-control" id="admin_password" name="admin_password" value="{{ generated_password }}">
+                <input type="text" class="form-control" id="admin_password" name="admin_password" required value="{{ generated_password }} ">
+                <div class="error-message"></div>
             </div>
 
             <button type="submit" class="btn btn-primary">Добавить</button>

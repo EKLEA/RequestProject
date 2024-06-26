@@ -6,6 +6,7 @@ from io import BytesIO
 from bson import ObjectId
 from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response
 from flask_pymongo import PyMongo
+from twilio.rest import Client
 import re
 
 from openpyxl.reader.excel import load_workbook
@@ -13,6 +14,7 @@ from openpyxl.workbook import Workbook
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 
@@ -33,7 +35,11 @@ adminsTypes = ["Главный", "Не главный"]
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-from flask import jsonify
+
+
+
+
+
 
 
 def check_duplicate_record(record):
@@ -62,24 +68,21 @@ def check_duplicate_admin(admin):
 def login():
     return render_template('index.html')
 
-
 @app.route('/check_login', methods=['POST'])
 def check_login():
     admin_login = request.form['username']
     password = request.form['password']
 
-    # Поиск пользователя
     user = mongo.db[ADMINS].find_one({'admin_login': admin_login})
-    if user and user['admin_password'] == password:  # хэш пароль потом вернуть
+
+    if user and user['admin_password'] == password:
         session['username'] = user['admin_login']
         if user.get('admin_type') == adminsTypes[1]:
             return redirect(url_for('dashboard'))
         elif user.get('admin_type') == adminsTypes[0]:
             return redirect(url_for('dashboardAdmin'))
-
-
     else:
-        return "Вход не удался! Пожалуйста, проверьте свое имя пользователя и пароль."
+        return render_template('index.html', error_message="Вход не удался! Пожалуйста, проверьте свое имя пользователя и пароль.")
 
 
 
@@ -96,7 +99,6 @@ def dashboardAdmin():
     searched_requests = session.get('searched_requests')
     searched_admins = session.get('searched_admins')
 
-    # Если результаты поиска есть в сессии, используем их
     if searched_requests is not None:
         user_requests = searched_requests
     else:
@@ -108,14 +110,17 @@ def dashboardAdmin():
     else:
         # Иначе загружаем всех администраторов из базы данных
         admins = list(mongo.db[ADMINS].find({}))
+    search_query = ""
 
+    if session.get('searched_search_query') is not None:
+        search_query = session.get('searched_search_query')
     return render_template('dashboardAdmin.html',
                            username=username,
                            user_requests=user_requests,
                            admins=admins,
                            generated_password=generated_password,
                            admin_generated_password=admin_generated_password,
-                           search_query=session.get('searched_search_query'))
+                           search_query=search_query)
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     username = session.get('username')
@@ -124,15 +129,12 @@ def dashboard():
 
     generated_password = secrets.token_urlsafe(12)
     search_query=""
-    # Получаем результаты поиска из сессии
     searched_requests = session.get('searched_requests')
     if session.get('searched_search_query') is not None:
         search_query = session.get('searched_search_query')
-    # Если результаты поиска есть в сессии, используем их
     if searched_requests is not None:
         user_requests = searched_requests
     else:
-        # Иначе загружаем все заявки из базы данных
         user_requests = list(mongo.db[REQUESTS].find({}))
 
     return render_template('dashboard.html',
@@ -164,6 +166,7 @@ def add_request(arg1,arg2):
 
 
         user = mongo.db[ADMINS].find_one({'admin_login': session.get('username')})
+
         # Формирование данных для добавления
         record = {
             'request_number': request.form['request_number'],
@@ -171,6 +174,7 @@ def add_request(arg1,arg2):
             'first_name': request.form['first_name'],
             'middle_name': request.form['middle_name'],
             'phone': request.form['phone'],
+            'email': request.form['email'],
             'ssid': request.form['ssid'],
             'login': request.form['login'],
             'password': request.form['password'],
@@ -311,10 +315,11 @@ def import_excel(arg1):
                         'first_name': first_name,
                         'middle_name': middle_name,
                         'phone': str(sheet[f'C{i}'].value),
-                        'ssid': str(sheet[f'D{i}'].value),
-                        'login': str(sheet[f'E{i}'].value),
-                        'password': str(sheet[f'F{i}'].value),
-                        'message': f"Ваш персональный пароль для подключения к сети {sheet[f'D{i}'].value} : {str(sheet[f'F{i}'].value)}",
+                        'email': str(sheet[f'D{i}'].value),
+                        'ssid': str(sheet[f'E{i}'].value),
+                        'login': str(sheet[f'F{i}'].value),
+                        'password': str(sheet[f'G{i}'].value),
+                        'message': f"Ваш персональный пароль для подключения к сети {sheet[f'D{i}'].value} : {str(sheet[f'G{i}'].value)}",
                         'adminInitials': f"{user.get('admin_last_name')} {user.get('admin_first_name')} {user.get('admin_middle_name')}"
                     }
 
@@ -352,10 +357,11 @@ def export_excel(arg1):
         sheet[f'A{1}'].value="ФИО"
         sheet[f'B{1}'].value="Заявка в SD"
         sheet[f'C{1}'].value="Телефон"
-        sheet[f'D{1}'].value="SSID"
-        sheet[f'E{1}'].value="Логин"
-        sheet[f'F{1}'].value="Пароль"
-        sheet[f'G{1}'].value="Текст СМС"
+        sheet[f'D{1}'].value="Почта"
+        sheet[f'E{1}'].value="SSID"
+        sheet[f'F{1}'].value="Логин"
+        sheet[f'G{1}'].value="Пароль"
+        sheet[f'H{1}'].value="Текст СМС"
 
         # Получаем данные из MongoDB
         records = mongo.db[REQUESTS].find()
@@ -366,6 +372,7 @@ def export_excel(arg1):
                 f"{record.get('last_name')} {record.get('first_name')} {record.get('middle_name')}",
                 record.get('request_number'),
                 record.get('phone'),
+                record.get('email'),
                 record.get('ssid'),
                 record.get('login'),
                 record.get('password'),
@@ -387,6 +394,43 @@ def export_excel(arg1):
         print(f"Ошибка при экспорте данных в Excel файл: {e}")
         return "Произошла ошибка при экспорте данных в Excel файл."
 
+
+@app.route('/send_messages/<arg1>', methods=['POST'])
+def send_messages(arg1):
+    try:
+        selected_requests_json = request.form.get('selected_requests')
+
+        if selected_requests_json:
+            selected_requests = json.loads(selected_requests_json)
+            print("Selected Requests:", selected_requests)
+
+            valid_object_ids = [ObjectId(req_id) for req_id in selected_requests if ObjectId.is_valid(req_id)]
+            print("Valid ObjectIds:", valid_object_ids)
+
+            method = request.form.get("send_method")
+            if valid_object_ids:
+                for obj_id in valid_object_ids:
+                    temp = mongo.db[REQUESTS].find_one({'_id': obj_id})
+                    if temp:
+                        if method == "email":
+                            to_email = temp.get('email')
+                            if to_email !="None":
+                                subject = 'Test Email'
+                                email_body = temp.get('message')
+                                #send_email(to_email, subject, email_body)
+                                print("Sending email")
+                        elif method == "phone":
+                            print("Sending SMS")
+                    else:
+                        print(f"Document not found for id: {obj_id}")
+
+            return redirect(url_for(arg1))
+        else:
+            raise ValueError("No selected_requests found in form data")
+
+    except Exception as e:
+        print(f"Error while sending messages: {e}")
+        return redirect(url_for(arg1))
 
 if __name__ == '__main__':
     app.run()
