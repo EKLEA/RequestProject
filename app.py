@@ -14,7 +14,9 @@ from openpyxl.workbook import Workbook
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from werkzeug.utils import secure_filename
-
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
@@ -37,8 +39,36 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
+sender_email = "email"
+sender_password = "password"
+smtp_server = "smtp.timeweb.ru"
+smtp_port = 465
+# Настройка SMTP сессии
+server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+server.login(sender_email, sender_password)  # Вход в аккаунт
+def send_email( recipient, body):
+    # Создание MIME сообщения
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = recipient
+    msg['Subject'] = "Wifi сеть"
+
+    # Добавление тела письма
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
 
 
+        # Отправка письма
+        text = msg.as_string()
+        server.sendmail(sender_email, recipient, text)
+
+        # Закрытие соединения
+        #server.quit()
+
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 
 
@@ -88,6 +118,7 @@ def check_login():
 
 @app.route('/dashboardAdmin', methods=['GET'])
 def dashboardAdmin():
+
     username = session.get('username')
     if not username:
         return redirect(url_for('login'))
@@ -410,14 +441,16 @@ def send_messages(arg1):
             method = request.form.get("send_method")
             if valid_object_ids:
                 for obj_id in valid_object_ids:
+                    print(obj_id)
                     temp = mongo.db[REQUESTS].find_one({'_id': obj_id})
+                    print(temp)
                     if temp:
+                        print(method)
                         if method == "email":
                             to_email = temp.get('email')
                             if to_email !="None":
-                                subject = 'Test Email'
                                 email_body = temp.get('message')
-                                #send_email(to_email, subject, email_body)
+                                send_email(to_email,  email_body)
                                 print("Sending email")
                         elif method == "phone":
                             print("Sending SMS")
