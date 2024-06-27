@@ -17,6 +17,7 @@ from werkzeug.utils import secure_filename
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import datetime
 
 app = Flask(__name__)
 
@@ -70,6 +71,12 @@ def send_email( recipient, body):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
+def log(message):
+    with open('logs/logs.txt', 'a') as file:
+        user = mongo.db[ADMINS].find_one({'admin_login': session.get('username')})
+        current_datetime = datetime.datetime.now()
+        formatted_datetime = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
+        file.write(f'{formatted_datetime} - {message}  админ: {user.get('admin_last_name')} {user.get('admin_first_name')} {user.get('admin_middle_name')}\n')
 
 
 def check_duplicate_record(record):
@@ -221,6 +228,7 @@ def add_request(arg1,arg2):
         try:
             # Добавление заявки в базу данных
             mongo.db[REQUESTS].insert_one(record)
+            log(f'Была добавлена заявка - {record.get("request_number")}')
             return redirect(url_for(arg2))
         except Exception as e:
             return ({'status': 'error', 'message': f'Ошибка при добавлении записи в базу данных: {str(e)}'})
@@ -253,6 +261,8 @@ def add_admin():
             try:
                 # Добавление заявки в базу данных
                 mongo.db[ADMINS].insert_one(admin)
+                log(f'Была добавлен админ - {admin.get('admin_last_name')} {admin.get('admin_first_name')} {admin.get('admin_middle_name')}')
+
             except Exception as e:
                 return ({'status': 'error', 'message': f'Ошибка при добавлении админа в базу данных: {str(e)}'})
 
@@ -283,7 +293,14 @@ def delete_admins():
         print("Valid ObjectIds:", valid_object_ids)
 
         if valid_object_ids:
-            mongo.db[ADMINS].delete_many({'_id': {'$in': valid_object_ids}})
+            for obj_id in valid_object_ids:
+                temp = mongo.db[ADMINS].find_one({'_id': obj_id})
+                print(temp)
+                if temp:
+                    log(f'Был удален администратор - {temp.get('admin_last_name')} {temp.get('admin_first_name')} {temp.get('admin_middle_name')}')
+                    mongo.db[ADMINS].delete_one(temp)
+                else:
+                    print(f"Document not found for id: {obj_id}")
 
         return redirect(url_for('dashboardAdmin'))
 
@@ -304,7 +321,14 @@ def delete_requests(arg1):
         print("Valid ObjectIds:", valid_object_ids)
 
         if valid_object_ids:
-            mongo.db[REQUESTS].delete_many({'_id': {'$in': valid_object_ids}})
+            for obj_id in valid_object_ids:
+                temp = mongo.db[REQUESTS].find_one({'_id': obj_id})
+                if temp:
+                    log(f'Была удалена заявка - {temp.get("request_number")}')
+                    mongo.db[REQUESTS].delete_one(temp)
+                else:
+                    print(f"Document not found for id: {obj_id}")
+
         return redirect(url_for(arg1))
 
     except Exception as e:
@@ -357,6 +381,7 @@ def import_excel(arg1):
                     # Вставляем данные в MongoDB
                     if not check_duplicate_record(record):
                         mongo.db[REQUESTS].insert_one(record)
+                        log(f'Была импортирована заявка - {record.get("request_number")}')
 
                     else:
                         continue
@@ -452,8 +477,10 @@ def send_messages(arg1):
                                 email_body = temp.get('message')
                                 send_email(to_email,  email_body)
                                 print("Sending email")
+                                log(f'Было отправдено сообщение на почту по заявке - {temp.get("request_number")}')
                         elif method == "phone":
                             print("Sending SMS")
+                            log(f'Было отправдено сообщение на мобильный телефон по заявке - {temp.get("request_number")}')
                     else:
                         print(f"Document not found for id: {obj_id}")
 
