@@ -18,6 +18,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import datetime
+import routeros_api
 
 app = Flask(__name__)
 
@@ -47,6 +48,16 @@ smtp_port = 465
 # Настройка SMTP сессии
 server = smtplib.SMTP_SSL(smtp_server, smtp_port)
 server.login(sender_email, sender_password)  # Вход в аккаунт
+
+
+connection = routeros_api.RouterOsApiPool(
+    host='192.168.88.1',  # IP адрес вашего MikroTik устройства
+    username='admin',     # Имя пользователя для входа
+    password='password',  # Пароль для входа
+    port=8728,            # Порт для API соединения, по умолчанию 8728
+    use_ssl=False         # Используйте SSL, если необходимо
+)
+
 def send_email( recipient, body):
     # Создание MIME сообщения
     msg = MIMEMultipart()
@@ -228,6 +239,22 @@ def add_request(arg1,arg2):
         try:
             # Добавление заявки в базу данных
             mongo.db[REQUESTS].insert_one(record)
+
+            api = connection.get_api()
+
+
+            user = {
+                'name': record.get("login"),
+                'password': record.get("password"),
+                'group': record.get("ssid")
+            }
+
+
+            api.get_resource('/ip/hotspot/user').add(**user)
+
+
+            connection.disconnect()
+
             log(f'Была добавлена заявка - {record.get("request_number")}')
             return redirect(url_for(arg2))
         except Exception as e:
@@ -326,6 +353,15 @@ def delete_requests(arg1):
                 if temp:
                     log(f'Была удалена заявка - {temp.get("request_number")}')
                     mongo.db[REQUESTS].delete_one(temp)
+
+                    api = connection.get_api()
+                    user = {
+                        'name': temp.get("login"),
+                        'password': temp.get("password"),
+                        'group': temp.get("ssid")
+                    }
+
+                    api.get_resource('/ip/hotspot/user').remove(**user)
                 else:
                     print(f"Document not found for id: {obj_id}")
 
