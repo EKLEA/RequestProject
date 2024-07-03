@@ -45,7 +45,7 @@ sender_email = "email"
 sender_password = "password"
 smtp_server = "smtp.timeweb.ru"
 smtp_port = 465
-# Настройка SMTP сессии
+ #Настройка SMTP сессии
 server = smtplib.SMTP_SSL(smtp_server, smtp_port)
 server.login(sender_email, sender_password)  # Вход в аккаунт
 
@@ -76,7 +76,7 @@ def send_email( recipient, body):
         server.sendmail(sender_email, recipient, text)
 
         # Закрытие соединения
-        #server.quit()
+        server.quit()
 
         print("Email sent successfully!")
     except Exception as e:
@@ -362,6 +362,7 @@ def delete_requests(arg1):
                     }
 
                     api.get_resource('/ip/hotspot/user').remove(**user)
+                    connection.disconnect()
                 else:
                     print(f"Document not found for id: {obj_id}")
 
@@ -513,7 +514,7 @@ def send_messages(arg1):
                                 email_body = temp.get('message')
                                 send_email(to_email,  email_body)
                                 print("Sending email")
-                                log(f'Было отправдено сообщение на почту по заявке - {temp.get("request_number")}')
+                                log(f'Было отправлено сообщение на почту по заявке - {temp.get("request_number")}')
                         elif method == "phone":
                             print("Sending SMS")
                             log(f'Было отправдено сообщение на мобильный телефон по заявке - {temp.get("request_number")}')
